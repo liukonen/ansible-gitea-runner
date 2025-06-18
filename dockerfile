@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# Install required system packages
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 \
@@ -18,8 +18,12 @@ RUN apt-get update && \
     openssh-client \
     bash \
     ca-certificates \
-    build-essential \
-    && pip install ansible \
-    && apt-get purge -y build-essential python3-dev \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc /usr/share/man /usr/share/info /usr/share/lintian /usr/share/locale
+    build-essential
+
+# Install Ansible using pip (in its own step for easier debugging)
+RUN pip install ansible
+
+# Clean up unnecessary build tools and docs
+RUN apt-get purge -y build-essential python3-dev && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc /usr/share/man /usr/share/info /usr/share/lintian /usr/share/locale
