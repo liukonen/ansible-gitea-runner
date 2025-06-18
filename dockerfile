@@ -1,23 +1,22 @@
 FROM gitea/runner-images:ubuntu-22.04-slim-v25.04.01
 
-# Install dependencies
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install dependencies in one layer & cleanup aggressively
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
-    ansible \
-    openssh-client \
-    rsync \
-    git \
-    curl \
-    sudo \
-    bash \
-    ca-certificates \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Verify ansible installation (optional)
-RUN ansible --version
-
-# Add your runner entrypoint or override if needed
-# ENTRYPOINT ["/path/to/act-runner"]
+    apt-get install -y --no-install-recommends \
+        python3 python3-pip python3-venv \
+        git \
+        curl \
+        rsync \
+        sudo \
+        openssh-client \
+        bash \
+        ca-certificates && \
+    # Install Ansible via pip (much smaller than apt)
+    pip install ansible && \
+    # Cleanup to shrink image
+    apt-get purge -y --auto-remove && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc /usr/share/man /usr/share/info /usr/share/lintian /usr/share/locale
